@@ -441,14 +441,16 @@ const updateEmployeeRole = () => {
                 .then((answer) => {
                     let newRole;
                     for (var e = 0; e < roleChoices.length; e++) {
-                        if (roleChoices[e].id === answer.role) {
+                        if (roleChoices[e].role_id === answer.role) {
                             newRole = roleChoices[e].id;
                         }
                     }
 
-                    connection.query("UPDATE employee SET role_id = ? WHERE last_name = ?", [answer.newRole, answer.employee])
-
-
+                    connection.query("UPDATE employee SET role_id = ? WHERE id <> '0' AND last_name = ?", [newRole, answer.employee]),
+                        function(err) {
+                            if (err) throw err;
+                            console.log("Successfully updated Role for employee " + answer.employee);
+                        }
                     connection.query(query,
                         (err, res) => {
                             if (err)
@@ -460,10 +462,10 @@ const updateEmployeeRole = () => {
                                 (err, res) => {
                                     if (err)
                                         throw err;
-
-                                    console.log("Successfully updated Role for employee " + answer.employee);
                                     console.log("\n Total Records Displayed: " + res[0].total);
                                     console.log("\n");
+
+
                                     mainMenu();
                                 })
                         })
