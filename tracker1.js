@@ -21,7 +21,7 @@ process.on('unhandledRejection', function(err) {
     console.log(err);
 });
 
-function mainMenu() {
+mainMenu = () => {
     inquirer.prompt({
         name: "action",
         type: "list",
@@ -34,7 +34,7 @@ function mainMenu() {
             "Add Department",
             "Add a Role",
             "Add an Employee",
-            "Update an Employee Role",
+            "Update Employee Role",
             "Exit"
             // "Update by Manager",
             // "Delete"
@@ -69,7 +69,7 @@ function mainMenu() {
                 addEmployee();
                 break;
 
-            case "Update an Employee Role":
+            case "Update Employee Role":
                 updateEmployeeRole();
                 break;
 
@@ -104,7 +104,7 @@ const viewAllEmployees = () => {
 };
 
 const viewAllByDepartment = () => {
-    let query = "SELECT department.id AS DEPARMENT_ID, department.name AS DEPARTMENT_NAME, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, role.title AS TITLE, role.salary AS SALARY, CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, manager.id AS MANAGER_ID ";
+    let query = "SELECT department.name AS DEPARTMENT_NAME, department.id AS DEPARMENT_ID, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, role.title AS TITLE, role.salary AS SALARY, CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, manager.id AS MANAGER_ID ";
     query += "FROM department INNER JOIN role ON role.department_id = department.id ";
     query += "INNER JOIN employee ON employee.role_id = role.id ";
     query += "LEFT JOIN manager ON manager.id = employee.manager_id ";
@@ -133,7 +133,7 @@ const viewAllByDepartment = () => {
 
 
 const viewAllByRole = () => {
-    let query = "SELECT role.id AS ROLE_ID, role.title AS TITLE, role.salary AS SALARY, department.id AS DEPARMENT_ID, department.name AS DEPARTMENT_NAME, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, manager.id AS MANAGER_ID ";
+    let query = "SELECT role.title AS TITLE, role.id AS ROLE_TITLE_ID, role.salary AS SALARY, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, department.id AS DEPARMENT_ID, department.name AS DEPARTMENT_NAME, CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, manager.id AS MANAGER_ID ";
     query += "FROM role INNER JOIN department ON department.id = role.department_id ";
     query += "INNER JOIN employee ON employee.role_id = role.id ";
     query += "LEFT JOIN manager ON manager.id = employee.manager_id ";
@@ -161,7 +161,7 @@ const viewAllByRole = () => {
 }
 
 const viewAllByManager = () => {
-    let query = "SELECT manager.id AS MANAGER_ID, CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, role.id AS ROLE_ID, role.title AS TITLE, role.salary AS SALARY, department.name AS DEPARTMENT_NAME, department.id AS DEPARMENT_ID ";
+    let query = "SELECT CONCAT(manager.mgr_firstName,' ',manager.mgr_lastName) AS MANAGER, manager.id AS MANAGER_ID, CONCAT(employee.first_name,' ',employee.last_name) AS EMPLOYEE, employee.id AS EMPLOYEE_ID, role.title AS TITLE, role.id AS ROLE_TITLE_ID, role.salary AS SALARY, department.name AS DEPARTMENT_NAME, department.id AS DEPARMENT_ID ";
     query += "FROM department INNER JOIN role ON role.department_id = department.id ";
     query += "INNER JOIN employee ON employee.role_id = role.id ";
     query += "LEFT JOIN manager ON manager.id = employee.manager_id ";
@@ -190,7 +190,7 @@ const viewAllByManager = () => {
 
 
 const addDepartment = () => {
-    let query = "SELECT department.id AS DEPARMENT_ID, department.name AS DEPARTMENT_NAME FROM department ORDER BY department.name ASC";
+    let query = "SELECT department.name AS DEPARTMENT_NAME, department.id AS DEPARMENT_ID FROM department ORDER BY department.name ASC";
 
     let count = "SELECT COUNT(*) as total FROM department";
     connection.query(count,
@@ -247,7 +247,7 @@ const addDepartment = () => {
 
 
 const addRole = () => {
-    let query = "SELECT role.id AS ROLE_ID, role.title AS ROLE FROM role ORDER BY role.title ASC";
+    let query = "SELECT role.title AS ROLE, role.id AS ROLE_TITLE_ID FROM role ORDER BY role.id ASC";
     connection.query(query,
         (err, res) => {
             console.table(res);
@@ -300,7 +300,7 @@ const addRole = () => {
                         department_id: chosenDept
                     })
 
-                    let newQuery = "SELECT role.id AS ROLE_ID, role.title AS ROLE FROM role ORDER BY role.title ASC";
+                    let newQuery = "SELECT role.id AS ROLE_TITLE_ID, role.title AS ROLE FROM role ORDER BY role.title ASC";
                     connection.query(newQuery,
                         (err, res) => {
                             if (err)
@@ -311,6 +311,7 @@ const addRole = () => {
                                 (err, res) => {
                                     if (err)
                                         throw err;
+                                    console.log("Successfully added " + answer.role);
                                     console.log("\n Updated Role Count: " + res[0].total);
                                     console.log("\n");
                                     mainMenu();
@@ -321,92 +322,151 @@ const addRole = () => {
 }
 
 
-const addEmployee = () =>
-    let query = "SELECT employee.id AS EMPLOYEE_ID, last_name AS LAST_NAME, first_name AS FIRST_NAME, FROM employee ORDER BY last_name ASC";
+const addEmployee = () => {
+    let query = "SELECT last_name AS LAST_NAME, first_name AS FIRST_NAME, employee.id AS EMPLOYEE_ID FROM employee ORDER BY last_name ASC";
+    connection.query(query,
+        (err, res) => {
+            console.table(res);
+        })
+    let count = "SELECT COUNT(*) as total FROM employee";
 
-connection.query(query,
-    (err, res) => {
-        console.table(res);
-    })
-let count = "SELECT COUNT(*) as total FROM employee";
+    connection.query(count,
+        (err, results) => {
+            console.log("\n Total current Employees: " + results[0].total);
+        })
 
-connection.query(count,
-    (err, results) => {
-        console.log("\n Current number of Employees: " + results[0].total);
-    })
-
-connection.query("SELECT * FROM department ORDER BY department.name ASC",
-        function(err, depList) {
+    connection.query("SELECT * FROM role ORDER BY role.title ASC",
+        function(err, roleList) {
             if (err)
                 throw err;
+
             inquirer.prompt([{
-                    type: "input",
-                    name: "firstName",
-                    message: "What is the first name of the Employee you would like to add?",
-
-                    type: "input",
-                    name: "lastName",
-                    message: "What is the last name of the Employee you would like to add?",
-
-                    type: "rawlist",
-                    choices: function() {
-                        let choiceArray = [];
-                        for (var i = 0; i < results.length; i++) {
-                            choiceArray.push(results[i].role.title);
-                        }
-                        return choiceArray;
+                        type: "input",
+                        name: "firstName",
+                        message: "What is the first name of the Employee you would like to add?",
                     },
-                    message: "What is the Employee's role?"
-                }])
+                    {
+                        type: "input",
+                        name: "lastName",
+                        message: "What is the last name of the Employee you would like to add?",
+                    },
+                    {
+                        name: "roleChoice",
+                        type: "rawlist",
+                        message: "What is the Employee's role?",
+                        choices: () => {
+                            let choiceArray = [];
+                            for (var i = 0; i < roleList.length; i++) {
+                                choiceArray.push(roleList[i].title);
+                            }
+                            return choiceArray;
+                        }
+                    }
+                ])
                 .then((answer) => {
+                    let chosenRole;
+                    for (var i = 0; i < roleList.length; i++) {
+                        if (roleList[i].name === answer.roleChoice) {
+                            chosenRole = roleList[i].id;
+                        }
+                    }
                     connection.query("INSERT INTO employee SET ?", {
-                            employee: answer.employee
-                        },
-                        function(err) {
-                            if (err) throw err;
-                            console.log(answer + " was successfully added");
-                            mainMenu();
-                        })
-                })
+                        first_name: answer.firstName,
+                        last_name: answer.lastName,
+                        role_id: chosenRole
+                    })
 
-            const updateEmployeeRole = () => {
-                connection.query("SELECT * FROM employee", function(err, results) {
-                    if (err) throw err;
 
-                    inquirer.prompt([{
-                            type: "rawlist",
-                            name: "choice",
-                            choices: function() {
-                                let choiceArray = [];
-                                for (var i = 0; i < results.length; i++) {
-                                    choiceArray.push(results[i].employee.name);
-                                }
-                                return choiceArray;
-                            },
-                            message: "What Employee would you like to update?",
-
-                            type: "rawlist",
-                            name: "choiceRole",
-                            choices: function() {
-                                let choiceRole = [];
-                                for (var i = 0; i < results.length; i++) {
-                                    choiceRole.push(results[i].role.id);
-                                }
-                                return choiceRole;
-                            },
-                            message: "What is the Employee's new Role ID?"
-                        }])
-                        .then((answer) => {
-                            connection.query("UPDATE INTO employee SET ?", {
-                                    name: answer.employee,
-                                    id: answer.role
-
-                                },
-                                function(err) {
-                                    if (err) throw err;
-                                    console.log(answer + " was successfully updated");
+                    let newQuery = "SELECT employee.id AS EMPLOYEE_ID, last_name AS LAST_NAME, first_name AS FIRST_NAME FROM employee ORDER BY last_name ASC";
+                    connection.query(newQuery,
+                        (err, res) => {
+                            if (err)
+                                throw err;
+                            console.table(res);
+                            let count = "SELECT COUNT(*) as total FROM employee";
+                            connection.query(count,
+                                (err, res) => {
+                                    if (err)
+                                        throw err;
+                                    console.log("Successfully added" + answer.firstName, answer.lastName);
+                                    console.log("\n Updated Employee Count: " + res[0].total);
+                                    console.log("\n");
+                                    mainMenu();
                                 })
-                            mainMenu();
                         })
                 })
-            }
+        })
+}
+
+const updateEmployeeRole = () => {
+    let query = "SELECT employee.last_name AS EMPLOYEE_LAST_NAME, employee.first_name AS EMPLOYEE_FIRST_NAME, employee.id AS EMPLOYEE_ID, role.title AS TITLE, role_id AS ROLE_TITLE_ID FROM department INNER JOIN role ON role.department_id = department.id INNER JOIN employee ON employee.role_id = role.id ORDER BY employee.last_name ASC";
+
+    let count = "SELECT COUNT(*) as total FROM employee";
+
+    connection.query(count,
+        (err, results) => {
+            console.log("\n Total Employees Displayed: " + results[0].total);
+        })
+
+    connection.query(query,
+        (err, res) => {
+            console.table(res);
+        })
+
+    let roles = "SELECT id, title FROM role ";
+
+    connection.query(roles,
+        (err, roleChoices) => {
+            if (err)
+                throw err;
+
+            inquirer.prompt([{
+                        name: "employee",
+                        type: "input",
+                        message: "What is the LAST NAME of the employee you would like to update?"
+                    },
+                    {
+                        name: "role",
+                        type: "rawlist",
+                        message: "What is the Employee's new role?",
+                        choices: () => {
+                            let roleArray = [];
+                            for (var r = 0; r < roleChoices.length; r++) {
+                                roleArray.push(roleChoices[r].title);
+                            }
+                            return roleArray;
+                        }
+                    }
+                ])
+                .then((answer) => {
+                    let newRole;
+                    for (var e = 0; e < roleChoices.length; e++) {
+                        if (roleChoices[e].id === answer.role) {
+                            newRole = roleChoices[e].id;
+                        }
+                    }
+
+                    connection.query("UPDATE employee SET role_id = ? WHERE last_name = ?", [answer.newRole, answer.employee])
+
+
+                    connection.query(query,
+                        (err, res) => {
+                            if (err)
+                                throw err;
+                            console.table(res);
+
+                            let count = "SELECT COUNT(*) as total FROM employee";
+                            connection.query(count,
+                                (err, res) => {
+                                    if (err)
+                                        throw err;
+
+                                    console.log("Successfully updated Role for employee " + answer.employee);
+                                    console.log("\n Total Records Displayed: " + res[0].total);
+                                    console.log("\n");
+                                    mainMenu();
+                                })
+                        })
+                })
+        })
+}
