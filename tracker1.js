@@ -2,6 +2,8 @@ const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 
+
+
 const connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -35,6 +37,7 @@ mainMenu = () => {
             "Add a Role",
             "Add an Employee",
             "Update Employee Role",
+            "Remove Employee",
             "Exit"
             // "Update by Manager",
             // "Delete"
@@ -71,6 +74,10 @@ mainMenu = () => {
 
             case "Update Employee Role":
                 updateEmployeeRole();
+                break;
+
+            case "Remove Employee":
+                deleteEmployee();
                 break;
 
             case "Exit":
@@ -466,6 +473,62 @@ const updateEmployeeRole = () => {
                                     console.log("\n");
 
 
+                                    mainMenu();
+                                })
+                        })
+                })
+        })
+}
+
+const deleteEmployee = () => {
+
+    let query = "SELECT last_name AS LAST_NAME, first_name AS FIRST_NAME, employee.id AS EMPLOYEE_ID FROM employee ORDER BY last_name ASC";
+
+    let count = "SELECT COUNT(*) as total FROM employee";
+    connection.query(count,
+        (err, results) => {
+            console.log("\n Total current Employees: " + results[0].total);
+        })
+
+    connection.query(query,
+        (err, res) => {
+            console.table(res);
+        })
+
+    connection.query("SELECT * FROM employee",
+        (err, deleteChoice) => {
+            if (err)
+                throw err;
+            inquirer.prompt({
+                    name: "delete",
+                    type: "rawlist",
+                    message: "Which Employee would you like to delete?",
+                    choices: () => {
+                        let deleteArray = [];
+                        for (var d = 0; d < deleteChoice.length; d++) {
+                            deleteArray.push(deleteChoice[d].last_name);
+                        }
+                        return deleteArray;
+                    }
+                })
+                .then((answer) => {
+                    connection.query("DELETE FROM employee WHERE id <> '0' AND ?", [{ last_name: answer.delete }])
+
+                    let newQuery = "SELECT last_name AS LAST_NAME, first_name AS FIRST_NAME, employee.id AS EMPLOYEE_ID FROM employee ORDER BY last_name ASC";
+                    connection.query(newQuery,
+                        (err, res) => {
+                            if (err)
+                                throw err;
+                            console.log("\n--------\n");
+                            console.log("Successfully deleted employee " + answer.delete);
+                            console.table(res);
+                            let count = "SELECT COUNT(*) as total FROM employee";
+                            connection.query(count,
+                                (err, res) => {
+                                    if (err)
+                                        throw err;;
+                                    console.log("\n Updated Employee Count: " + res[0].total);
+                                    console.log("\n");
                                     mainMenu();
                                 })
                         })
