@@ -15,6 +15,7 @@
 
 
 *view by Employee*
+
 ![picture](./assets/viewbyEmp.gif)
 
 
@@ -24,6 +25,8 @@
 
 
 *view by department*
+
+
 ![picture](./assets/viewasDep.gif)
 
 
@@ -34,6 +37,8 @@
 
 
 *view by manager*
+
+
 ![picture](./assets/viewbyMan.gif)
 
 
@@ -44,6 +49,8 @@
 
 
 *view by role*
+
+
 ![picture](./assets/viewbyRo.gif)
 
 
@@ -53,6 +60,8 @@
 
 
 *add department*
+
+
 ![picture](./assets/adddep.gif)
 
 
@@ -64,6 +73,8 @@
 
 
 *add role*
+
+
 ![picture](./assets/addRole.gif)
 
 
@@ -75,6 +86,8 @@
 
 
 *add employee*
+
+
 ![picture](./assets/addEmp.gif)
 
 
@@ -86,6 +99,8 @@
 
 
 *update employee role*
+
+
 ![picture] UNAVAILABLE
 
 
@@ -97,6 +112,8 @@
 
 
 *remove employee*
+
+
 ![picture](./assets/removeEmp.gif)
 
 
